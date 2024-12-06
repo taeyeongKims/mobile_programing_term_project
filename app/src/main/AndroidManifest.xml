@@ -22,6 +22,27 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".Stage1Activity"
+            android:screenOrientation="landscape"
+            android:exported="true"/>
+        <activity
+            android:name=".Stage2Activity"
+            android:screenOrientation="landscape"
+            android:exported="true"/>
+        <activity
+            android:name=".Stage3Activity"
+            android:screenOrientation="landscape"
+            android:exported="true"/>
+        <activity
+            android:name=".Stage4Activity"
+            android:screenOrientation="landscape"
+            android:exported="true"/>
+        <activity
+            android:name=".Stage5Activity"
+            android:screenOrientation="landscape"
+            android:exported="true"/>
+
     </application>
 
 </manifest>

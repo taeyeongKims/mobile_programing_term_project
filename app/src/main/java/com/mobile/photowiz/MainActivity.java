@@ -1,26 +1,29 @@
 package com.mobile.photowiz;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageButton;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
-public class MainActivity extends FullScreenActivity {
+public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.stage1);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.stage_1), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+        setContentView(R.layout.activity_main);
+
+        ImageButton startButton = findViewById(R.id.start_button);
+
+        Animation fadeInAnimation = AnimationUtils.loadAnimation(this, R.anim.title_fade_in);
+
+        startButton.startAnimation(fadeInAnimation);
+
+        startButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, Stage1Activity.class);
+            startActivity(intent);
         });
     }
-
 }
