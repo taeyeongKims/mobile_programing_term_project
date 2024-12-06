@@ -3,13 +3,9 @@ package com.mobile.photowiz.view;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class CustomView extends View {
 
@@ -33,8 +29,32 @@ public class CustomView extends View {
     @Override
     protected  void onDraw(android.graphics.Canvas canvas){
         super.onDraw(canvas);
-        canvas.drawBitmap(image,null, new android.graphics.RectF(0,0,getWidth(),getHeight()),null);
+        if (image != null) {
+            // Calculate scale factors to maintain the aspect ratio
+            float imageAspectRatio = (float) image.getWidth() / image.getHeight();
+            float viewAspectRatio = (float) getWidth() / getHeight();
 
+            float left, top, right, bottom;
+
+            if (imageAspectRatio > viewAspectRatio) {
+                // Image is wider than the view
+                float scaledHeight = getWidth() / imageAspectRatio;
+                left = 0;
+                top = (getHeight() - scaledHeight) / 2;
+                right = getWidth();
+                bottom = top + scaledHeight;
+            } else {
+                // Image is taller than the view
+                float scaledWidth = getHeight() * imageAspectRatio;
+                left = (getWidth() - scaledWidth) / 2;
+                top = 0;
+                right = left + scaledWidth;
+                bottom = getHeight();
+            }
+
+            // Draw the bitmap with adjusted bounds
+            canvas.drawBitmap(image, null, new android.graphics.RectF(left, top, right, bottom), null);
+        }
     }
 
     @Override

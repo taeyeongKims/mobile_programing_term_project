@@ -1,5 +1,6 @@
 package com.mobile.photowiz;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -13,57 +14,92 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class Stage1Activity extends AppCompatActivity {
 
     private ProgressBar progressBar;
     private CountDownTimer timer;
     private RatingBar ratingBar;
-    private ImageView incorrectImage;
+    private ImageView incorrectImage, correctImage, findImage, stageClearImage;
     private int remainingHearts = 5;
     private int progress = 100;
+    private int correctAnswers = 0;
+    private boolean isPaused = false;
+    private ImageButton button1, button2, button3, button4, button5, pauseResumeButton;
+    private List<View> allButtons = new ArrayList<>();
+    private boolean[] foundAnswers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.stage1);
 
-        // ProgressBar 설정
-        progressBar = findViewById(R.id.progress_bar);
-        startTimer();
+        foundAnswers = new boolean[5];
+        Arrays.fill(foundAnswers,false);
 
-        // RatingBar 설정
+        findImage = findViewById(R.id.find);
+        progressBar = findViewById(R.id.progress_bar);
+
         ratingBar = findViewById(R.id.hart);
 
-        // 틀렸다는 이미지 설정
+        correctImage = findViewById(R.id.correct_image);
         incorrectImage = findViewById(R.id.incorrect_image);
-        // Pause 버튼 처리
+
+        stageClearImage = findViewById(R.id.stage_clear);
+
         Button pauseButton = findViewById(R.id.pause);
-        pauseButton.setVisibility(View.VISIBLE);
         pauseButton.setOnClickListener(v -> {
-            if (timer != null) {
-                timer.cancel();
-                Toast.makeText(this, "Game Paused", Toast.LENGTH_SHORT).show();
+            if (!isPaused) {
+                isPaused = true;
+
+                if (timer != null) {
+                    timer.cancel();
+                }
+
+                pauseResumeButton.setVisibility(View.VISIBLE);
+                pauseResumeButton.setClickable(true);
+                pauseButton.setClickable(false);
+
+                Toast.makeText(this, "게임 정지", Toast.LENGTH_SHORT).show();
+
+                setAllButtonsEnabled(false);
             }
         });
 
-        // Ready / Go 이미지 설정
+        pauseResumeButton = findViewById(R.id.pause_resume_button);
+        pauseResumeButton.setOnClickListener(v -> {
+            if (isPaused) {
+                isPaused = false;
+
+                startTimer();
+
+                pauseResumeButton.setVisibility(View.INVISIBLE);
+                pauseResumeButton.setClickable(false);
+                pauseButton.setClickable(true);
+
+                Toast.makeText(this, "게임 재개", Toast.LENGTH_SHORT).show();
+                setAllButtonsEnabled(true);
+            }
+        });
+
+
         ImageView readyImage = findViewById(R.id.ready);
         ImageView goImage = findViewById(R.id.go);
 
-        // "Ready" -> "Go" 애니메이션
         readyImage.setVisibility(View.VISIBLE);
         readyImage.postDelayed(() -> {
             readyImage.setVisibility(View.GONE);
             goImage.setVisibility(View.VISIBLE);
 
-            goImage.postDelayed(() -> goImage.setVisibility(View.GONE), 1000);
-        }, 1000);
+            goImage.postDelayed(() -> goImage.setVisibility(View.GONE), 1500);
+        }, 1500);
 
-        // "Game Over" 이미지 설정
         ImageView gameOverImage = findViewById(R.id.game_over);
         gameOverImage.setVisibility(View.GONE);
 
-        // 맵을 덮는 버튼 설정
         Button overlayButton = findViewById(R.id.overlay_button);
         overlayButton.setOnClickListener(v -> {
             decreaseHeart();
@@ -71,16 +107,35 @@ public class Stage1Activity extends AppCompatActivity {
         });
         overlayButton.setVisibility(View.VISIBLE);
 
-        // Answer 버튼 처리
-        setAnswerButton(findViewById(R.id.answer1));
-        setAnswerButton(findViewById(R.id.answer2));
-        setAnswerButton(findViewById(R.id.answer3));
-        setAnswerButton(findViewById(R.id.answer4));
-        setAnswerButton(findViewById(R.id.answer5));
-    }
+        button1 = findViewById(R.id.answer1);
+        button2 = findViewById(R.id.answer2);
+        button3 = findViewById(R.id.answer3);
+        button4 = findViewById(R.id.answer4);
+        button5 = findViewById(R.id.answer5);
 
+
+        allButtons.add(button1);
+        allButtons.add(button2);
+        allButtons.add(button3);
+        allButtons.add(button4);
+        allButtons.add(button5);
+        allButtons.add(overlayButton);
+
+        setAnswerButton(findViewById(R.id.answer1), 0);
+        setAnswerButton(findViewById(R.id.answer2), 1);
+        setAnswerButton(findViewById(R.id.answer3), 2);
+        setAnswerButton(findViewById(R.id.answer4), 3);
+        setAnswerButton(findViewById(R.id.answer5), 4);
+
+        new Handler().postDelayed(this::startTimer, 3000);
+    }
+    private void setAllButtonsEnabled(boolean enabled) {
+        for (View button : allButtons) {
+            button.setEnabled(enabled);
+        }
+    }
     private void startTimer() {
-        timer = new CountDownTimer(30000, 300) { // 30초 타이머
+        timer = new CountDownTimer(60000, 600) {
             @Override
             public void onTick(long millisUntilFinished) {
                 progress -= 1;
@@ -90,26 +145,51 @@ public class Stage1Activity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 progressBar.setProgress(0);
-                Toast.makeText(Stage1Activity.this, "Time's up!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(Stage1Activity.this, "시간이 다 됐어요..", Toast.LENGTH_SHORT).show();
                 showGameOver();
             }
         };
         timer.start();
     }
 
-    private void setAnswerButton(ImageButton answerButton) {
-        answerButton.setVisibility(View.VISIBLE);
-        answerButton.setOnClickListener(v -> {
-            Toast.makeText(this, "Correct!", Toast.LENGTH_SHORT).show();
-            answerButton.setVisibility(View.INVISIBLE);
-        });
+     private void setAnswerButton(ImageButton answerButton, int answerIndex) {
+         answerButton.setClickable(true);
+
+         answerButton.setOnClickListener(v -> {
+             if (foundAnswers[answerIndex]) {
+                 Toast.makeText(this, "이미 찾은 부분입니다!", Toast.LENGTH_SHORT).show();
+                 return;
+             }
+             foundAnswers[answerIndex] = true;
+             showcorrectImage();
+             correctAnswers++;
+             updateFindImage();
+             answerButton.setAlpha(1.0f);
+
+             if (correctAnswers == 5) {
+                 if (timer != null) timer.cancel();
+                 showStageClear();
+             }
+         });
     }
 
+    private void updateFindImage() {
+        int resId = getResources().getIdentifier("find" + correctAnswers, "drawable", getPackageName());
+        if (resId != 0) {
+            findImage.setImageResource(resId);
+        }
+    }
     private void showGameOver() {
         ImageView gameOverImage = findViewById(R.id.game_over);
         gameOverImage.setVisibility(View.VISIBLE);
-
-        // 게임 오버 후 추가 동작 (예: 다른 화면으로 이동)
+        timer.cancel();
+        // 첫 화면으로 이동
+        new Handler().postDelayed(() -> {
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+        }, 1500);
     }
 
     private void decreaseHeart() {
@@ -118,16 +198,28 @@ public class Stage1Activity extends AppCompatActivity {
             ratingBar.setRating(remainingHearts);
 
             if (remainingHearts == 0) {
-                Toast.makeText(this, "No hearts left!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "남은 목숨이 없습니다", Toast.LENGTH_SHORT).show();
                 showGameOver();
             }
         }
     }
 
+    private void showcorrectImage() {
+        correctImage.setVisibility(View.VISIBLE);
+        new Handler().postDelayed(() -> correctImage.setVisibility(View.GONE), 500);
+    }
     private void showIncorrectImage() {
-        incorrectImage.setVisibility(View.VISIBLE); // 이미지 보이기
+        incorrectImage.setVisibility(View.VISIBLE);
+        new Handler().postDelayed(() -> incorrectImage.setVisibility(View.GONE), 500);
+    }
 
-        // 1초 뒤에 틀렸다는 이미지 숨기기
-        new Handler().postDelayed(() -> incorrectImage.setVisibility(View.GONE), 1000);
+    private void showStageClear() {
+        stageClearImage.setVisibility(View.VISIBLE);
+
+
+        new Handler().postDelayed(() -> {
+            startActivity(new Intent(this, Stage2Activity.class));
+            finish();
+        }, 1500);
     }
 }
