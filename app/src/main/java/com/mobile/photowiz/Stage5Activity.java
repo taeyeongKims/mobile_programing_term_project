@@ -12,45 +12,96 @@ import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class Stage5Activity extends AppCompatActivity {
-
+public class Stage5Activity extends FullScreenActivity {
     private ProgressBar progressBar;
     private CountDownTimer timer;
     private RatingBar ratingBar;
-    private ImageView incorrectImage, correctImage, findImage, stageClearImage;
+    private ImageView incorrectImage, correctImage, findImage, stageClearImage, gameOverImage, readyImage, goImage;
     private int remainingHearts = 5;
     private int progress = 100;
     private int correctAnswers = 0;
     private boolean isPaused = false;
     private ImageButton button1, button2, button3, button4, button5, pauseResumeButton;
     private List<View> allButtons = new ArrayList<>();
-    private boolean[] foundAnswers;
+    private Button overlayButton, pauseButton;
+    private boolean[] foundAnswers = {false, false, false, false, false};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.stage5);
+        setContentView(R.layout.stage4);
 
-        foundAnswers = new boolean[5];
-        Arrays.fill(foundAnswers,false);
-
-        findImage = findViewById(R.id.find);
         progressBar = findViewById(R.id.progress_bar);
-
         ratingBar = findViewById(R.id.hart);
-
+        findImage = findViewById(R.id.find);
         correctImage = findViewById(R.id.correct_image);
         incorrectImage = findViewById(R.id.incorrect_image);
-
         stageClearImage = findViewById(R.id.stage_clear);
+        goImage = findViewById(R.id.go);
+        readyImage = findViewById(R.id.ready);
+        gameOverImage = findViewById(R.id.game_over);
 
-        Button pauseButton = findViewById(R.id.pause);
+        readyImage.setVisibility(View.VISIBLE);
+        readyImagePostDelayed(readyImage, goImage);
+
+        gameOverImage.setVisibility(View.GONE);
+        setAllButton();
+
+        // 화면 전환 후 3초 뒤에 시작 타이머 실행
+        new Handler().postDelayed(this::startTimer, 3000);
+    }
+
+    private static void readyImagePostDelayed(ImageView readyImage, ImageView goImage) {
+        readyImage.postDelayed(() -> {
+            readyImage.setVisibility(View.GONE);
+            goImage.setVisibility(View.VISIBLE);
+
+            goImage.postDelayed(() -> goImage.setVisibility(View.GONE), 1500);
+        }, 1500);
+    }
+
+    private void setAllButton() {
+        button1 = findViewById(R.id.answer1);
+        button2 = findViewById(R.id.answer2);
+        button3 = findViewById(R.id.answer3);
+        button4 = findViewById(R.id.answer4);
+        button5 = findViewById(R.id.answer5);
+
+        allButtons.add(button1);
+        allButtons.add(button2);
+        allButtons.add(button3);
+        allButtons.add(button4);
+        allButtons.add(button5);
+
+        for(int i =0; i<allButtons.size(); i++){
+            setAnswerButtonClickListener((ImageButton)allButtons.get(i), i);
+        }
+
+        overlayButton = findViewById(R.id.overlay_button);
+        allButtons.add(overlayButton);
+        setOverlayButtonClickListener(overlayButton);
+        overlayButton.setVisibility(View.VISIBLE);
+
+        pauseButton = findViewById(R.id.pause);
+        setPauseButtonClickListener(pauseButton);
+        allButtons.add(pauseButton);
+
+        pauseResumeButton = findViewById(R.id.pause_resume_button);
+        setPauseResumeButtonClickListener(pauseButton);
+        allButtons.add(pauseResumeButton);
+    }
+
+    private void setOverlayButtonClickListener(Button overlayButton) {
+        overlayButton.setOnClickListener(v -> {
+            decreaseHeart();
+            showIncorrectImage();
+        });
+    }
+
+    private void setPauseButtonClickListener(Button pauseButton) {
         pauseButton.setOnClickListener(v -> {
             if (!isPaused) {
                 isPaused = true;
@@ -63,11 +114,14 @@ public class Stage5Activity extends AppCompatActivity {
                 pauseResumeButton.setClickable(true);
                 pauseButton.setClickable(false);
 
+                Toast.makeText(this, "게임 정지", Toast.LENGTH_SHORT).show();
+
                 setAllButtonsEnabled(false);
             }
         });
+    }
 
-        pauseResumeButton = findViewById(R.id.pause_resume_button);
+    private void setPauseResumeButtonClickListener(Button pauseButton) {
         pauseResumeButton.setOnClickListener(v -> {
             if (isPaused) {
                 isPaused = false;
@@ -78,59 +132,40 @@ public class Stage5Activity extends AppCompatActivity {
                 pauseResumeButton.setClickable(false);
                 pauseButton.setClickable(true);
 
+                Toast.makeText(this, "게임 재개", Toast.LENGTH_SHORT).show();
                 setAllButtonsEnabled(true);
             }
         });
-
-
-        ImageView readyImage = findViewById(R.id.ready);
-        ImageView goImage = findViewById(R.id.go);
-
-        readyImage.setVisibility(View.VISIBLE);
-        readyImage.postDelayed(() -> {
-            readyImage.setVisibility(View.GONE);
-            goImage.setVisibility(View.VISIBLE);
-
-            goImage.postDelayed(() -> goImage.setVisibility(View.GONE), 1500);
-        }, 1500);
-
-        ImageView gameOverImage = findViewById(R.id.game_over);
-        gameOverImage.setVisibility(View.GONE);
-
-        Button overlayButton = findViewById(R.id.overlay_button);
-        overlayButton.setOnClickListener(v -> {
-            decreaseHeart();
-            showIncorrectImage();
-        });
-        overlayButton.setVisibility(View.VISIBLE);
-
-        button1 = findViewById(R.id.answer1);
-        button2 = findViewById(R.id.answer2);
-        button3 = findViewById(R.id.answer3);
-        button4 = findViewById(R.id.answer4);
-        button5 = findViewById(R.id.answer5);
-
-
-        allButtons.add(button1);
-        allButtons.add(button2);
-        allButtons.add(button3);
-        allButtons.add(button4);
-        allButtons.add(button5);
-        allButtons.add(overlayButton);
-
-        setAnswerButton(findViewById(R.id.answer1), 0);
-        setAnswerButton(findViewById(R.id.answer2), 1);
-        setAnswerButton(findViewById(R.id.answer3), 2);
-        setAnswerButton(findViewById(R.id.answer4), 3);
-        setAnswerButton(findViewById(R.id.answer5), 4);
-
-        new Handler().postDelayed(this::startTimer, 3000);
     }
+
+    private void setAnswerButtonClickListener(ImageButton answerButton, int answerIndex) {
+        answerButton.setClickable(true);
+
+        answerButton.setOnClickListener(v -> {
+            if (foundAnswers[answerIndex]) {
+                Toast.makeText(this, "이미 찾은 부분입니다!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            foundAnswers[answerIndex] = true;
+            correctAnswers++;
+            updateFindImage();
+            showCorrectImage();
+            answerButton.setAlpha(1.0f);
+
+            if (correctAnswers == 5) {
+                if (timer != null) timer.cancel();
+                showStageClear();
+            }
+        });
+    }
+
     private void setAllButtonsEnabled(boolean enabled) {
         for (View button : allButtons) {
             button.setEnabled(enabled);
         }
     }
+
     private void startTimer() {
         timer = new CountDownTimer(60000, 600) {
             @Override
@@ -149,44 +184,11 @@ public class Stage5Activity extends AppCompatActivity {
         timer.start();
     }
 
-    private void setAnswerButton(ImageButton answerButton, int answerIndex) {
-        answerButton.setClickable(true);
-
-        answerButton.setOnClickListener(v -> {
-            if (foundAnswers[answerIndex]) {
-                Toast.makeText(this, "이미 찾은 부분입니다!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            foundAnswers[answerIndex] = true;
-            showcorrectImage();
-            correctAnswers++;
-            updateFindImage();
-            answerButton.setAlpha(1.0f);
-
-            if (correctAnswers == 5) {
-                if (timer != null) timer.cancel();
-                showStageClear();
-            }
-        });
-    }
-
     private void updateFindImage() {
         int resId = getResources().getIdentifier("find" + correctAnswers, "drawable", getPackageName());
         if (resId != 0) {
             findImage.setImageResource(resId);
         }
-    }
-    private void showGameOver() {
-        ImageView gameOverImage = findViewById(R.id.game_over);
-        gameOverImage.setVisibility(View.VISIBLE);
-        timer.cancel();
-        // 첫 화면으로 이동
-        new Handler().postDelayed(() -> {
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            finish();
-        }, 1500);
     }
 
     private void decreaseHeart() {
@@ -201,10 +203,11 @@ public class Stage5Activity extends AppCompatActivity {
         }
     }
 
-    private void showcorrectImage() {
+    private void showCorrectImage() {
         correctImage.setVisibility(View.VISIBLE);
         new Handler().postDelayed(() -> correctImage.setVisibility(View.GONE), 500);
     }
+
     private void showIncorrectImage() {
         incorrectImage.setVisibility(View.VISIBLE);
         new Handler().postDelayed(() -> incorrectImage.setVisibility(View.GONE), 500);
@@ -216,6 +219,19 @@ public class Stage5Activity extends AppCompatActivity {
         Toast.makeText(this, "올 스테이지 클리어!", Toast.LENGTH_SHORT).show();
         new Handler().postDelayed(() -> {
             startActivity(new Intent(this, MainActivity.class));
+            finish();
+        }, 1500);
+    }
+
+    private void showGameOver() {
+        ImageView gameOverImage = findViewById(R.id.game_over);
+        gameOverImage.setVisibility(View.VISIBLE);
+        timer.cancel();
+        // 첫 화면으로 이동
+        new Handler().postDelayed(() -> {
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
             finish();
         }, 1500);
     }
