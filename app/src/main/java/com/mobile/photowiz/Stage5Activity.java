@@ -32,7 +32,7 @@ public class Stage5Activity extends FullScreenActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.stage4);
+        setContentView(R.layout.stage5);
 
         progressBar = findViewById(R.id.progress_bar);
         ratingBar = findViewById(R.id.hart);
@@ -220,7 +220,7 @@ public class Stage5Activity extends FullScreenActivity {
         new Handler().postDelayed(() -> {
             startActivity(new Intent(this, MainActivity.class));
             finish();
-        }, 1500);
+        }, 2000);
     }
 
     private void showGameOver() {

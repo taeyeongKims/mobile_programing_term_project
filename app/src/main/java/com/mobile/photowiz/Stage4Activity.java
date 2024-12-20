@@ -217,7 +217,7 @@ public class Stage4Activity extends FullScreenActivity {
         stageClearImage.setVisibility(View.VISIBLE);
 
         new Handler().postDelayed(() -> {
-            startActivity(new Intent(this, Stage4Activity.class));
+            startActivity(new Intent(this, Stage5Activity.class));
             finish();
         }, 1500);
     }
